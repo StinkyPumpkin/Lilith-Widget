@@ -7,6 +7,7 @@
 #include "SKSEMenuFramework.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -19,13 +20,28 @@
 //   bar_fill.dds   fill, cropped left->right by energy percent + tinted by drain state
 //   bar_frame.dds  drawn over the fill at bar size
 //   icon.dds       square icon left of the bar
+// Stage mode (like the arousal widget's aroused0..8 set): energy0.dds .. energy8.dds are
+// complete bar images, one per level; the level comes from energy percent and the frame
+// is drawn at bar size, tinted by drain state. Chosen automatically when all 9 exist
+// (settings fillMode 0), or forced with fillMode 2.
 namespace {
     namespace DL = ImGuiMCP::ImDrawListManager;
     using ImGuiMCP::ImVec2;
     using ImGuiMCP::ImU32;
 
     ImGuiMCP::ImTextureID g_texBg = nullptr, g_texFill = nullptr, g_texFrame = nullptr, g_texIcon = nullptr;
+    constexpr int kStages = 9;
+    std::array<ImGuiMCP::ImTextureID, kStages> g_stage{};
+    bool g_stagesComplete = false;   // all 9 stage frames loaded
     bool g_registered = false;
+
+    // Same mapping as the arousal widget: 0..99 -> 0..8 in 12-point steps, 100 -> 8.
+    int StageFromPercent(float pct) {
+        const int v = static_cast<int>(pct * 100.0f + 0.5f);
+        if (v <= 0) return 0;
+        if (v >= 100) return kStages - 1;
+        return std::min(v / 12, kStages - 1);
+    }
 
     constexpr int OverlayFlags =
         ImGuiMCP::ImGuiWindowFlags_NoTitleBar
@@ -133,6 +149,21 @@ namespace {
         if (pct < 0.2f && st.drainCode != 2) fillA *= 0.55f + 0.45f * Pulse(1.6f);   // low-energy breathe
         const float rounding = std::min(h * 0.35f, 8.0f);
 
+        // Stage-frame mode: one complete image per level replaces bg + fill + frame.
+        bool stageMode = false;
+        if (tex) {
+            if (cfg.fillMode == 2)      stageMode = true;
+            else if (cfg.fillMode == 0) stageMode = g_stagesComplete;
+        }
+        ImGuiMCP::ImTextureID stageTex = nullptr;
+        if (stageMode) {
+            stageTex = g_stage[StageFromPercent(pct)];
+            if (!stageTex) stageMode = false;   // forced but frame missing -> fall back
+        }
+
+        if (stageMode) {
+            DL::AddImage(dl, stageTex, p0, p1, { 0, 0 }, { 1, 1 }, Col(pal.light, fillA));
+        } else {
         if (tex && g_texBg) {
             DL::AddImage(dl, g_texBg, p0, p1, { 0, 0 }, { 1, 1 }, Col({255, 255, 255}, A));
         } else {
@@ -155,6 +186,7 @@ namespace {
         } else {
             DL::AddRect(dl, p0, p1, Col({255, 255, 255}, 0.35f * A), rounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
         }
+        }   // !stageMode
 
         // Energy text, centred on the bar with a soft shadow.
         if (cfg.showText) {
@@ -209,6 +241,17 @@ namespace HudUI {
         g_texFill  = TryLoad("bar_fill");
         g_texFrame = TryLoad("bar_frame");
         g_texIcon  = TryLoad("icon");
+
+        int stagesLoaded = 0;
+        for (int i = 0; i < kStages; ++i) {
+            char n[16];
+            std::snprintf(n, sizeof(n), "energy%d", i);
+            g_stage[i] = TryLoad(n);
+            if (g_stage[i]) ++stagesLoaded;
+        }
+        g_stagesComplete = (stagesLoaded == kStages);
+        SKSE::log::info("HudUI::Register - stage frames {}/{} -> stage mode {}", stagesLoaded, kStages,
+                        g_stagesComplete ? "available" : "unavailable (auto uses crop/flat)");
 
         SKSEMenuFramework::AddHudElement(Render);
         g_registered = true;

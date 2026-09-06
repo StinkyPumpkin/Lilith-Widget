@@ -6,7 +6,10 @@ SKSE energy / level bar for **Children of Lilith – Succubus of Skyrim** (5.2.0
 - Succubus level and XP-to-next-level strip.
 - Shows only while the player is a succubus. Hides in menus, loading screens, vanity camera, and when the compass is hidden (iHUD, Sandbox When Idle).
 - Hide-toggle hotkey. Position, size, opacity, text size in the SKSE Menu Framework settings page ("Lilith Widget"), saved to `Data/SKSE/Plugins/LilithWidget/config.json`.
-- Optional art: drop `bar_bg.dds`, `bar_fill.dds`, `bar_frame.dds`, `icon.dds` into `Data/Interface/HUDWidgets/lilith/` and they replace the flat shapes. Works with no art at all.
+- Art in `Data/Interface/HUDWidgets/lilith/`, two styles, both optional:
+  - **Crop**: `bar_bg.dds`, `bar_fill.dds`, `bar_frame.dds`. One fill image, cropped from the left by energy percent.
+  - **Stages**: `energy0.dds` … `energy8.dds`, one complete bar image per level (like the arousal widget's aroused0-8). Used automatically when all nine exist, or forced in settings.
+  - `icon.dds` sits left of the bar in either style. The fill is tinted by drain state, so keep it light. Works with no art at all (flat shapes). Templates for both styles are in the repo's `art/` folder.
 - No Papyrus, no mod events, no iWant Widgets. Reads CoL's energy straight off its script object and the level globals from the plugin.
 
 ## What the package contains
