@@ -19,7 +19,12 @@ namespace {
         if (ImGuiMCP::SliderFloat("Text size (px)", &cfg.textSizePx, 8.0f, 96.0f, "%.0f")) dirty = true;
         if (ImGuiMCP::SliderFloat("XP strip height (px)", &cfg.xpBarHeight, 1.0f, 40.0f, "%.0f")) dirty = true;
         if (ImGuiMCP::Checkbox("Use DDS textures when present", &cfg.useTextures)) dirty = true;
-        ImGuiMCP::Text("Textures: Data/Interface/HUDWidgets/lilith/bar_bg.dds, bar_fill.dds, bar_frame.dds, icon.dds");
+        static const char* const kFillModes[] = { "Auto (stages if present, else crop)", "Crop bar_fill.dds", "Stage frames energy0-8.dds" };
+        if (ImGuiMCP::Combo("Fill mode", &cfg.fillMode, kFillModes, 3)) dirty = true;
+        ImGuiMCP::Text("Textures: Data/Interface/HUDWidgets/lilith/");
+        ImGuiMCP::Text("  crop:   bar_bg.dds, bar_fill.dds, bar_frame.dds");
+        ImGuiMCP::Text("  stages: energy0.dds .. energy8.dds (one full bar image per level)");
+        ImGuiMCP::Text("  icon.dds (optional, left of the bar)");
         if (dirty) Settings::MarkDirty();
         { auto lk = Settings::Lock(); Settings::Get() = cfg; }
     }

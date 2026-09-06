@@ -15,6 +15,9 @@ namespace Settings {
         float textSizePx   = 18.0f;
         float xpBarHeight  = 5.0f;
         bool  useTextures  = true;     // use Interface/HUDWidgets/lilith/*.dds when present
+        // 0 = auto (energy0..8.dds stage frames if present, else bar_fill crop, else flat),
+        // 1 = force crop (bar_bg/bar_fill/bar_frame), 2 = force stage frames.
+        int   fillMode     = 0;
         // How often the Papyrus values are re-read (ms). Reads are cheap and run
         // on the render thread, but energy only changes a few times a minute.
         int   readCadenceMs = 500;
