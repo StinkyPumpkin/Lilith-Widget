@@ -1,0 +1,1 @@
+Scriptname CoL_ConfigHandler_Script extends Quest

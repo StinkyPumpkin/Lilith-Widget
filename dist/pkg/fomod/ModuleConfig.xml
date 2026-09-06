@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+  <moduleName>Lilith Widget</moduleName>
+  <requiredInstallFiles>
+    <file source="SKSE\Plugins\LilithWidget.dll" destination="SKSE\Plugins\LilithWidget.dll"/>
+    <file source="ChildrenOfLilith.esp" destination="ChildrenOfLilith.esp"/>
+    <file source="Scripts\CoL_UI_Widget_Script.pex" destination="Scripts\CoL_UI_Widget_Script.pex"/>
+    <file source="Scripts\Source\CoL_UI_Widget_Script.psc" destination="Scripts\Source\CoL_UI_Widget_Script.psc"/>
+    <file source="LICENSE-ChildrenOfLilith.txt" destination="LICENSE-ChildrenOfLilith.txt"/>
+  </requiredInstallFiles>
+  <installSteps order="Explicit">
+    <installStep name="Patches">
+      <optionalFileGroups order="Explicit">
+        <group name="Children of Lilith patches you already use (re-mastered without iWant Widgets)" type="SelectAny">
+          <plugins order="Explicit">
+            <plugin name="A Skyrim Kiss handler patch">
+              <description>Replaces ChildrenOfLilithASKPatch.esp. Only pick this if you installed it from the Children of Lilith installer.</description>
+              <files><file source="Patches\ASkyrimKiss\ChildrenOfLilithASKPatch.esp" destination="ChildrenOfLilithASKPatch.esp"/></files>
+              <typeDescriptor><type name="Optional"/></typeDescriptor>
+            </plugin>
+            <plugin name="FlowerGirls handler patch">
+              <description>Replaces ChildrenOfLilithFGPatch.esp. Only pick this if you installed it from the Children of Lilith installer.</description>
+              <files><file source="Patches\FlowerGirls\ChildrenOfLilithFGPatch.esp" destination="ChildrenOfLilithFGPatch.esp"/></files>
+              <typeDescriptor><type name="Optional"/></typeDescriptor>
+            </plugin>
+            <plugin name="Immersive Lap Sitting patch">
+              <description>Replaces CoL_ILS_Patch.esp. Only pick this if you installed it from the Children of Lilith installer.</description>
+              <files><file source="Patches\ImmersiveLapSitting\CoL_ILS_Patch.esp" destination="CoL_ILS_Patch.esp"/></files>
+              <typeDescriptor><type name="Optional"/></typeDescriptor>
+            </plugin>
+            <plugin name="Vancian Magic (Ordinator) patch">
+              <description>Replaces ChildrenOfLilithVancianPatch.esp. Only pick this if you installed it from the Children of Lilith installer.</description>
+              <files><file source="Patches\Vancian\ChildrenOfLilithVancianPatch.esp" destination="ChildrenOfLilithVancianPatch.esp"/></files>
+              <typeDescriptor><type name="Optional"/></typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
+  </installSteps>
+</config>
