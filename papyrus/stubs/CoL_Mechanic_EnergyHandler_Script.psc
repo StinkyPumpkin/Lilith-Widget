@@ -1,0 +1,1 @@
+Scriptname CoL_Mechanic_EnergyHandler_Script extends Quest
