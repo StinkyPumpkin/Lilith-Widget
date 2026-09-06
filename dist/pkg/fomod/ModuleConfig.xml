@@ -6,6 +6,10 @@
     <file source="ChildrenOfLilith.esp" destination="ChildrenOfLilith.esp"/>
     <file source="Scripts\CoL_UI_Widget_Script.pex" destination="Scripts\CoL_UI_Widget_Script.pex"/>
     <file source="Scripts\Source\CoL_UI_Widget_Script.psc" destination="Scripts\Source\CoL_UI_Widget_Script.psc"/>
+    <file source="Interface\HUDWidgets\lilithar_bg.dds" destination="Interface\HUDWidgets\lilithar_bg.dds"/>
+    <file source="Interface\HUDWidgets\lilithar_fill.dds" destination="Interface\HUDWidgets\lilithar_fill.dds"/>
+    <file source="Interface\HUDWidgets\lilithar_frame.dds" destination="Interface\HUDWidgets\lilithar_frame.dds"/>
+    <file source="Interface\HUDWidgets\lilith\icon.dds" destination="Interface\HUDWidgets\lilith\icon.dds"/>
     <file source="LICENSE-ChildrenOfLilith.txt" destination="LICENSE-ChildrenOfLilith.txt"/>
   </requiredInstallFiles>
   <installSteps order="Explicit">
