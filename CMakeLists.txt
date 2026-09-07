@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 # LilithWidget — energy / level bar for Children of Lilith (Succubus of Skyrim),
 # rendered through SKSE Menu Framework. Sibling of ArousedWidget (same skeleton).
-project(LilithWidget VERSION 0.1.0 LANGUAGES CXX)
+project(LilithWidget VERSION 0.1.1 LANGUAGES CXX)
 
 if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
     set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/Lilith Widget--Claude")
