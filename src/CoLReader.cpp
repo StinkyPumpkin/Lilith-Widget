@@ -128,6 +128,11 @@ namespace CoLReader {
         }
 
         std::lock_guard lk(g_mutex);
+        // Log the gating flags whenever they change so "no bar" is explainable from the log.
+        if (st.succubus != g_state.succubus || st.energyOk != g_state.energyOk) {
+            SKSE::log::info("CoLReader - isSuccubus={} energyRead={} energy={:.1f}/{:.1f} level={} drain={}",
+                            st.succubus, st.energyOk, st.energy, st.energyMax, st.level, st.drainCode);
+        }
         g_state = st;
     }
 

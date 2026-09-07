@@ -1,5 +1,6 @@
 #include "SettingsUI.h"
 #include "Settings.h"
+#include "CoLReader.h"
 
 #include "SKSEMenuFramework.h"
 
@@ -8,6 +9,18 @@ namespace {
         Settings::Config cfg;
         { auto lk = Settings::Lock(); cfg = Settings::Get(); }
         bool dirty = false;
+
+        // Live status so a hidden bar is explainable without reading the log.
+        {
+            const auto st = CoLReader::Get();
+            if (!st.available)      ImGuiMCP::Text("Status: ChildrenOfLilith.esp not found - widget idle");
+            else if (!st.succubus)  ImGuiMCP::Text("Status: player is not a succubus (CoL_IsPlayerSuccubus = 0) - bar hidden");
+            else if (!st.energyOk)  ImGuiMCP::Text("Status: succubus, but energy script not readable - bar hidden (see LilithWidget.log)");
+            else                    ImGuiMCP::Text("Status: energy %.0f / %.0f, level %d (%.0f%% to next), drain state %d",
+                                                   st.energy, st.energyMax, st.level, st.levelRatio * 100.0f, st.drainCode);
+        }
+        ImGuiMCP::Text("");
+
         if (ImGuiMCP::Checkbox("Enabled", &cfg.enabled)) dirty = true;
         if (ImGuiMCP::SliderFloat("X", &cfg.x, 0.0f, 3840.0f, "%.0f")) dirty = true;
         if (ImGuiMCP::SliderFloat("Y", &cfg.y, 0.0f, 2160.0f, "%.0f")) dirty = true;
