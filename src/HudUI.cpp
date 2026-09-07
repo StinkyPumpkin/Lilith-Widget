@@ -11,6 +11,10 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
+#include <filesystem>
+#include <format>
+#include <fstream>
 #include <string>
 
 // Energy bar for Children of Lilith, drawn with the ImGui draw list so it needs no
@@ -217,11 +221,41 @@ namespace {
         ImGuiMCP::End();
     }
 
+    // When the framework (DirectXTK's DDS loader) rejects a file that exists, say why in
+    // terms a painter can act on. The common one: block-compressed (BC1/BC3/BC7...) textures
+    // must have width AND height that are multiples of 4, or D3D11 refuses to create them.
+    std::string ExplainDDS(const char* path) {
+        std::error_code ec;
+        const auto full = std::filesystem::current_path() / path;
+        if (!std::filesystem::exists(full, ec)) return "file not found";
+        std::ifstream f(full, std::ios::binary);
+        char h[148] = {};
+        f.read(h, sizeof(h));
+        if (f.gcount() < 128 || std::memcmp(h, "DDS ", 4) != 0) return "exists but is not a DDS file";
+        std::uint32_t height, width;
+        std::memcpy(&height, h + 12, 4);
+        std::memcpy(&width, h + 16, 4);
+        char fourcc[5] = { h[84], h[85], h[86], h[87], 0 };
+        std::uint32_t dxgi = 0;
+        const bool dx10 = std::memcmp(fourcc, "DX10", 4) == 0;
+        if (dx10 && f.gcount() >= 132) std::memcpy(&dxgi, h + 128, 4);
+        const bool blockCompressed = dx10 ? (dxgi >= 70 && dxgi <= 99) /* BC1..BC7 */ : (fourcc[0] == 'D' && fourcc[1] == 'X' && fourcc[2] == 'T');
+        std::string s = std::format("exists: {}x{}, {}{}", width, height,
+                                    dx10 ? "DX10 header, DXGI format " : "FourCC ",
+                                    dx10 ? std::to_string(dxgi) : std::string(fourcc[0] ? fourcc : "none (uncompressed)"));
+        if (blockCompressed && ((width % 4) || (height % 4)))
+            s += " - REJECTED: block-compressed textures need width and height that are multiples of 4 (resize, or export uncompressed B8G8R8A8)";
+        else
+            s += " - loader rejected it (try uncompressed B8G8R8A8 with mipmaps)";
+        return s;
+    }
+
     ImGuiMCP::ImTextureID TryLoad(const char* name) {
         char p[128];
         std::snprintf(p, sizeof(p), "Data/Interface/HUDWidgets/lilith/%s.dds", name);
         auto t = SKSEMenuFramework::LoadTexture(p);
-        SKSE::log::info("HudUI - texture {}: {}", p, t ? "loaded" : "not found (flat shapes used)");
+        if (t) SKSE::log::info("HudUI - texture {}: loaded", p);
+        else   SKSE::log::info("HudUI - texture {}: not loaded ({}); flat shapes used for this piece", p, ExplainDDS(p));
         return t;
     }
 }
