@@ -2,6 +2,8 @@
 
 SKSE energy / level bar for **Children of Lilith – Succubus of Skyrim** (5.2.0), with iWant Widgets removed from the game entirely.
 
+Nexus: https://www.nexusmods.com/skyrimspecialedition/mods/191060
+
 - Energy bar (current / max) coloured by drain state: lilac idle, pink draining, red drain-to-death. Breathes when energy is under 20%.
 - Succubus level and XP-to-next-level strip.
 - Shows only while the player is a succubus. Hides in menus, loading screens, vanity camera, and when the compass is hidden (iHUD, Sandbox When Idle).
