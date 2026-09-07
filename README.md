@@ -8,7 +8,7 @@ SKSE energy / level bar for **Children of Lilith – Succubus of Skyrim** (5.2.0
 - Hide-toggle hotkey. Position, size, opacity, text size in the SKSE Menu Framework settings page ("Lilith Widget"), saved to `Data/SKSE/Plugins/LilithWidget/config.json`.
 - Art in `Data/Interface/HUDWidgets/lilith/`, two styles, both optional:
   - **Crop**: `bar_bg.dds`, `bar_fill.dds`, `bar_frame.dds`. One fill image, cropped from the left by energy percent.
-  - **Stages**: `energy0.dds` … `energy8.dds`, one complete bar image per level (like the arousal widget's aroused0-8). Shipped, so this is the default look; switch to crop in settings if you prefer it.
+  - **Stages**: `energy0.dds` … `energy8.dds`, one complete bar image per level (like the arousal widget's aroused0-8). The installer asks which style to install; the widget uses whichever set is present (stages win when both exist, or force one with "Fill mode" in settings).
   - `icon.dds` sits left of the bar in either style. The fill is tinted by drain state, so keep it light. Works with no art at all (flat shapes). Editable PNG/DDS templates for both styles are in the repo's `art/` folder.
 - No Papyrus, no mod events, no iWant Widgets. Reads CoL's energy straight off its script object and the level globals from the plugin.
 
