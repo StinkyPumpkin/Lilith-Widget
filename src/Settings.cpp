@@ -23,11 +23,13 @@ namespace {
             "  \"width\": %.2f,\n  \"height\": %.2f,\n  \"alpha\": %.3f,\n"
             "  \"showText\": %s,\n  \"showLevel\": %s,\n  \"textSizePx\": %.2f,\n"
             "  \"xpBarHeight\": %.2f,\n  \"useTextures\": %s,\n  \"fillMode\": %d,\n"
+            "  \"keepAspect\": %s,\n  \"tintStages\": %s,\n"
             "  \"readCadenceMs\": %d,\n  \"hideHotkeyDX\": %d,\n  \"followCompassHide\": %s\n"
             "}\n",
             B(c.enabled), c.x, c.y, c.width, c.height, c.alpha,
             B(c.showText), B(c.showLevel), c.textSizePx,
             c.xpBarHeight, B(c.useTextures), c.fillMode,
+            B(c.keepAspect), B(c.tintStages),
             c.readCadenceMs, c.hideHotkeyDX, B(c.followCompassHide));
         return buf;
     }
@@ -77,6 +79,8 @@ namespace Settings {
         ReadB(txt, "useTextures", c.useTextures);
         ReadI(txt, "fillMode", c.fillMode);
         if (c.fillMode < 0 || c.fillMode > 2) c.fillMode = 0;
+        ReadB(txt, "keepAspect", c.keepAspect);
+        ReadB(txt, "tintStages", c.tintStages);
         ReadI(txt, "readCadenceMs", c.readCadenceMs);
         ReadI(txt, "hideHotkeyDX", c.hideHotkeyDX);
         ReadB(txt, "followCompassHide", c.followCompassHide);

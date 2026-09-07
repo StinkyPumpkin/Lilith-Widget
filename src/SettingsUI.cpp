@@ -34,6 +34,8 @@ namespace {
         if (ImGuiMCP::Checkbox("Use DDS textures when present", &cfg.useTextures)) dirty = true;
         static const char* const kFillModes[] = { "Auto (stages if present, else crop)", "Crop bar_fill.dds", "Stage frames energy0-8.dds" };
         if (ImGuiMCP::Combo("Fill mode", &cfg.fillMode, kFillModes, 3)) dirty = true;
+        if (ImGuiMCP::Checkbox("Keep texture aspect ratio (bar height follows width)", &cfg.keepAspect)) dirty = true;
+        if (ImGuiMCP::Checkbox("Tint stage frames by drain state", &cfg.tintStages)) dirty = true;
         ImGuiMCP::Text("Textures: Data/Interface/HUDWidgets/lilith/");
         ImGuiMCP::Text("  crop:   bar_bg.dds, bar_fill.dds, bar_frame.dds");
         ImGuiMCP::Text("  stages: energy0.dds .. energy8.dds (one full bar image per level)");
