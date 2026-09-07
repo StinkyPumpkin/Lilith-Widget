@@ -6,22 +6,42 @@
     <file source="ChildrenOfLilith.esp" destination="ChildrenOfLilith.esp"/>
     <file source="Scripts\CoL_UI_Widget_Script.pex" destination="Scripts\CoL_UI_Widget_Script.pex"/>
     <file source="Scripts\Source\CoL_UI_Widget_Script.psc" destination="Scripts\Source\CoL_UI_Widget_Script.psc"/>
-    <file source="Interface\HUDWidgets\lilith\bar_bg.dds" destination="Interface\HUDWidgets\lilith\bar_bg.dds"/>
-    <file source="Interface\HUDWidgets\lilith\bar_fill.dds" destination="Interface\HUDWidgets\lilith\bar_fill.dds"/>
-    <file source="Interface\HUDWidgets\lilith\bar_frame.dds" destination="Interface\HUDWidgets\lilith\bar_frame.dds"/>
-    <file source="Interface\HUDWidgets\lilith\icon.dds" destination="Interface\HUDWidgets\lilith\icon.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy0.dds" destination="Interface\HUDWidgets\lilith\energy0.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy1.dds" destination="Interface\HUDWidgets\lilith\energy1.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy2.dds" destination="Interface\HUDWidgets\lilith\energy2.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy3.dds" destination="Interface\HUDWidgets\lilith\energy3.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy4.dds" destination="Interface\HUDWidgets\lilith\energy4.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy5.dds" destination="Interface\HUDWidgets\lilith\energy5.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy6.dds" destination="Interface\HUDWidgets\lilith\energy6.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy7.dds" destination="Interface\HUDWidgets\lilith\energy7.dds"/>
-    <file source="Interface\HUDWidgets\lilith\energy8.dds" destination="Interface\HUDWidgets\lilith\energy8.dds"/>
+    <file source="Art\icon.dds" destination="Interface\HUDWidgets\lilith\icon.dds"/>
     <file source="LICENSE-ChildrenOfLilith.txt" destination="LICENSE-ChildrenOfLilith.txt"/>
   </requiredInstallFiles>
   <installSteps order="Explicit">
+    <installStep name="Bar art">
+      <optionalFileGroups order="Explicit">
+        <group name="Bar art style" type="SelectExactlyOne">
+          <plugins order="Explicit">
+            <plugin name="Stage frames (9 images, one per level)">
+              <description>energy0.dds to energy8.dds - a complete bar image per energy level, the same way OSL Aroused Widget's aroused0-8 work. Easiest to repaint: each level is its own picture.</description>
+              <files>
+                <file source="Art\Stages\energy0.dds" destination="Interface\HUDWidgets\lilith\energy0.dds"/>
+                <file source="Art\Stages\energy1.dds" destination="Interface\HUDWidgets\lilith\energy1.dds"/>
+                <file source="Art\Stages\energy2.dds" destination="Interface\HUDWidgets\lilith\energy2.dds"/>
+                <file source="Art\Stages\energy3.dds" destination="Interface\HUDWidgets\lilith\energy3.dds"/>
+                <file source="Art\Stages\energy4.dds" destination="Interface\HUDWidgets\lilith\energy4.dds"/>
+                <file source="Art\Stages\energy5.dds" destination="Interface\HUDWidgets\lilith\energy5.dds"/>
+                <file source="Art\Stages\energy6.dds" destination="Interface\HUDWidgets\lilith\energy6.dds"/>
+                <file source="Art\Stages\energy7.dds" destination="Interface\HUDWidgets\lilith\energy7.dds"/>
+                <file source="Art\Stages\energy8.dds" destination="Interface\HUDWidgets\lilith\energy8.dds"/>
+              </files>
+              <typeDescriptor><type name="Recommended"/></typeDescriptor>
+            </plugin>
+            <plugin name="Single bar (3 images, cropped as it empties)">
+              <description>bar_bg.dds, bar_fill.dds, bar_frame.dds - one fill image that the widget crops from the left by energy percent, plus a background and a frame. Smooth per-percent fill; what you paint at the 40% mark shows at 40% energy.</description>
+              <files>
+                <file source="Art\Crop\bar_bg.dds" destination="Interface\HUDWidgets\lilith\bar_bg.dds"/>
+                <file source="Art\Crop\bar_fill.dds" destination="Interface\HUDWidgets\lilith\bar_fill.dds"/>
+                <file source="Art\Crop\bar_frame.dds" destination="Interface\HUDWidgets\lilith\bar_frame.dds"/>
+              </files>
+              <typeDescriptor><type name="Optional"/></typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
     <installStep name="Patches">
       <optionalFileGroups order="Explicit">
         <group name="Children of Lilith patches you already use (re-mastered without iWant Widgets)" type="SelectAny">
