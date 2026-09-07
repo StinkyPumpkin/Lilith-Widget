@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <vector>
 #include <unordered_map>
 
 #include <d3d11.h>
@@ -36,15 +37,28 @@ namespace {
     using ImGuiMCP::ImVec2;
     using ImGuiMCP::ImU32;
 
-    ImGuiMCP::ImTextureID g_texBg = nullptr, g_texFill = nullptr, g_texFrame = nullptr, g_texIcon = nullptr;
+    // Art is indexed by drain state: 0 idle, 1 draining, 2 drain to death. State 0 is the base
+    // set (energyN.dds / bar_*.dds); states 1 and 2 are optional "_drain" / "_death" variants.
+    // A state with no art of its own falls back to the base art with the drain tint.
+    constexpr int kStates = 3;
+    constexpr const char* kStateSuffix[kStates] = { "", "_drain", "_death" };
+    ImGuiMCP::ImTextureID g_texIcon = nullptr;
+    std::array<ImGuiMCP::ImTextureID, kStates> g_texBg{}, g_texFill{}, g_texFrame{};
     constexpr int kStages = 9;
-    std::array<ImGuiMCP::ImTextureID, kStages> g_stage{};
-    bool g_stagesComplete = false;   // all 9 stage frames loaded
+    std::array<std::array<ImGuiMCP::ImTextureID, kStages>, kStates> g_stage{};
+    bool g_stagesComplete = false;   // all 9 base stage frames loaded
     bool g_registered = false;
 
     // Native pixel size of each loaded texture (ImTextureID is an ID3D11ShaderResourceView*
     // under SKSE Menu Framework's DX11 backend). Used to keep the bar at the art's aspect.
     std::unordered_map<void*, ImVec2> g_texSize;
+    // uv of the art's bottom-right corner; (1,1) unless the texture was padded (see PadBlockCompressed).
+    std::unordered_map<void*, ImVec2> g_texUv;
+
+    ImVec2 UvMax(ImGuiMCP::ImTextureID id) {
+        auto it = g_texUv.find(id);
+        return it == g_texUv.end() ? ImVec2{ 1, 1 } : it->second;
+    }
 
     ImVec2 QueryTexSize(ImGuiMCP::ImTextureID id) {
         ImVec2 out{ 0, 0 };
@@ -145,17 +159,31 @@ namespace {
             if (cfg.fillMode == 2)      stageMode = true;
             else if (cfg.fillMode == 0) stageMode = g_stagesComplete;
         }
+        // Per-state art: use the drain-state set when the painter supplied it (exact colours,
+        // no tint); otherwise the base set, tinted.
+        const int state = std::clamp(st.drainCode, 0, kStates - 1);
+        auto pick = [&](const std::array<ImGuiMCP::ImTextureID, kStates>& set, bool& exact) {
+            if (state > 0 && set[state]) { exact = true; return set[state]; }
+            exact = false; return set[0];
+        };
         ImGuiMCP::ImTextureID stageTex = nullptr;
+        bool stageExact = false;
         if (stageMode) {
-            stageTex = g_stage[StageFromPercent(pct)];
+            const int idx = StageFromPercent(pct);
+            if (state > 0 && g_stage[state][idx]) { stageTex = g_stage[state][idx]; stageExact = true; }
+            else stageTex = g_stage[0][idx];
             if (!stageTex) stageMode = false;   // forced but frame missing -> fall back
         }
+        bool bgExact = false, fillExact = false, frameExact = false;
+        const auto texBg    = pick(g_texBg, bgExact);
+        const auto texFill  = pick(g_texFill, fillExact);
+        const auto texFrame = pick(g_texFrame, frameExact);
 
         // Bar height: from the art's aspect ratio at the chosen width (keepAspect), else as set.
         float h = std::max(cfg.height, 2.0f);
         if (tex && cfg.keepAspect) {
             const float asp = stageMode ? TexAspect(stageTex)
-                            : (g_texBg ? TexAspect(g_texBg) : (g_texFill ? TexAspect(g_texFill) : 0.0f));
+                            : (texBg ? TexAspect(texBg) : (texFill ? TexAspect(texFill) : 0.0f));
             if (asp > 0.0f) h = std::max(w * asp, 2.0f);
         }
 
@@ -192,7 +220,7 @@ namespace {
         // Icon
         if (hasIcon) {
             const float iy = origin.y + (totalH - iconSz) * 0.5f;
-            DL::AddImage(dl, g_texIcon, { cx, iy }, { cx + iconSz, iy + iconSz }, { 0, 0 }, { 1, 1 }, Col({255, 255, 255}, A));
+            DL::AddImage(dl, g_texIcon, { cx, iy }, { cx + iconSz, iy + iconSz }, { 0, 0 }, UvMax(g_texIcon), Col({255, 255, 255}, A));
             cx += iconSz + gap;
         }
 
@@ -204,20 +232,21 @@ namespace {
         if (pct < 0.2f && st.drainCode != 2) fillA *= 0.55f + 0.45f * Pulse(1.6f);   // low-energy breathe
         const float rounding = std::min(h * 0.35f, 8.0f);
 
+        const Rgb white{ 255, 255, 255 };
         if (stageMode) {
-            // Stage frames are finished paintings: tint only if asked (breathe still fades the alpha).
-            const Rgb stageCol = cfg.tintStages ? pal.light : Rgb{ 255, 255, 255 };
-            DL::AddImage(dl, stageTex, p0, p1, { 0, 0 }, { 1, 1 }, Col(stageCol, fillA));
+            // Exact per-state painting -> no tint. Base painting -> drain tint unless turned off.
+            const Rgb stageCol = (stageExact || !cfg.tintStages) ? white : pal.light;
+            DL::AddImage(dl, stageTex, p0, p1, { 0, 0 }, UvMax(stageTex), Col(stageCol, fillA));
         } else {
-        if (tex && g_texBg) {
-            DL::AddImage(dl, g_texBg, p0, p1, { 0, 0 }, { 1, 1 }, Col({255, 255, 255}, A));
+        if (tex && texBg) {
+            DL::AddImage(dl, texBg, p0, p1, { 0, 0 }, UvMax(texBg), Col(white, A));
         } else {
             DL::AddRectFilled(dl, p0, p1, Col({0, 0, 0}, 0.60f * A), rounding, ImGuiMCP::ImDrawFlags_RoundCornersAll);
         }
         if (pct > 0.0f) {
             const ImVec2 f1{ p0.x + w * pct, p1.y };
-            if (tex && g_texFill) {
-                DL::AddImage(dl, g_texFill, p0, f1, { 0, 0 }, { pct, 1 }, Col(pal.light, fillA));
+            if (tex && texFill) {
+                DL::AddImage(dl, texFill, p0, f1, { 0, 0 }, { pct * UvMax(texFill).x, UvMax(texFill).y }, Col(fillExact ? white : pal.light, fillA));
             } else {
                 // Vertical gradient light -> dark, inset 1px so the frame reads.
                 const ImVec2 i0{ p0.x + 1.0f, p0.y + 1.0f };
@@ -226,8 +255,8 @@ namespace {
                     Col(pal.light, fillA), Col(pal.light, fillA), Col(pal.dark, fillA), Col(pal.dark, fillA));
             }
         }
-        if (tex && g_texFrame) {
-            DL::AddImage(dl, g_texFrame, p0, p1, { 0, 0 }, { 1, 1 }, Col({255, 255, 255}, A));
+        if (tex && texFrame) {
+            DL::AddImage(dl, texFrame, p0, p1, { 0, 0 }, UvMax(texFrame), Col(white, A));
         } else {
             DL::AddRect(dl, p0, p1, Col({255, 255, 255}, 0.35f * A), rounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
         }
@@ -291,16 +320,71 @@ namespace {
         return s;
     }
 
-    ImGuiMCP::ImTextureID TryLoad(const char* name) {
+    // D3D11 refuses a block-compressed (BC1..BC7) texture whose top mip is not a multiple of 4
+    // wide and high, but the DDS file already stores whole 4x4 blocks (ceil(w/4) x ceil(h/4)).
+    // So a 1024x250 BC7 export is byte-for-byte a valid 1024x252 texture: rewrite the header's
+    // width/height to the padded size into a cache file and load that. The extra rows are the
+    // encoder's edge padding; the draw crops them off with uvMax (see g_texUv).
+    // Returns the cache path, or empty if the file needs no help.
+    std::string PadBlockCompressed(const std::filesystem::path& full, const char* name, ImVec2& srcSize) {
+        std::ifstream f(full, std::ios::binary);
+        std::vector<char> buf((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        if (buf.size() < 148 || std::memcmp(buf.data(), "DDS ", 4) != 0) return {};
+        std::uint32_t height, width;
+        std::memcpy(&height, buf.data() + 12, 4);
+        std::memcpy(&width, buf.data() + 16, 4);
+        const bool dx10 = std::memcmp(buf.data() + 84, "DX10", 4) == 0;
+        std::uint32_t dxgi = 0;
+        if (dx10) std::memcpy(&dxgi, buf.data() + 128, 4);
+        const bool bc = dx10 ? (dxgi >= 70 && dxgi <= 99) : (buf[84] == 'D' && buf[85] == 'X' && buf[86] == 'T');
+        if (!bc || (width % 4 == 0 && height % 4 == 0)) return {};
+        const std::uint32_t pw = (width + 3) & ~3u, ph = (height + 3) & ~3u;
+        std::memcpy(buf.data() + 12, &ph, 4);
+        std::memcpy(buf.data() + 16, &pw, 4);
+        // Only the top mip is guaranteed to be laid out as we assume; mip levels of a
+        // non-multiple-of-4 chain are unreliable, so declare a single level.
+        std::uint32_t one = 1;
+        std::memcpy(buf.data() + 28, &one, 4);
+        std::uint32_t flags; std::memcpy(&flags, buf.data() + 8, 4);
+        flags &= ~0x20000u;   // DDSD_MIPMAPCOUNT
+        std::memcpy(buf.data() + 8, &flags, 4);
+        std::uint32_t caps; std::memcpy(&caps, buf.data() + 108, 4);
+        caps &= ~0x400008u;   // DDSCAPS_MIPMAP | DDSCAPS_COMPLEX
+        std::memcpy(buf.data() + 108, &caps, 4);
+        std::error_code ec;
+        const auto dir = std::filesystem::current_path() / "Data/SKSE/Plugins/LilithWidget/texcache";
+        std::filesystem::create_directories(dir, ec);
+        const std::string rel = std::format("Data/SKSE/Plugins/LilithWidget/texcache/{}.dds", name);
+        std::ofstream o(std::filesystem::current_path() / rel, std::ios::binary | std::ios::trunc);
+        if (!o) return {};
+        o.write(buf.data(), static_cast<std::streamsize>(buf.size()));
+        srcSize = { static_cast<float>(width), static_cast<float>(height) };
+        SKSE::log::info("HudUI - texture {}: {}x{} block-compressed, padded to {}x{} via {}", name, width, height, pw, ph, rel);
+        return rel;
+    }
+
+    ImGuiMCP::ImTextureID TryLoad(const char* name, bool optional = false) {
         char p[128];
         std::snprintf(p, sizeof(p), "Data/Interface/HUDWidgets/lilith/%s.dds", name);
-        auto t = SKSEMenuFramework::LoadTexture(p);
+        std::error_code ec;
+        const auto full = std::filesystem::current_path() / p;
+        if (optional && !std::filesystem::exists(full, ec)) return nullptr;
+        ImVec2 srcSize{ 0, 0 };
+        std::string padded;
+        if (std::filesystem::exists(full, ec)) padded = PadBlockCompressed(full, name, srcSize);
+        auto t = SKSEMenuFramework::LoadTexture(padded.empty() ? std::string(p) : padded);
         if (t) {
             const ImVec2 sz = QueryTexSize(t);
-            g_texSize[t] = sz;
-            SKSE::log::info("HudUI - texture {}: loaded ({}x{})", p, static_cast<int>(sz.x), static_cast<int>(sz.y));
+            if (srcSize.x > 0 && sz.x > 0) {
+                g_texSize[t] = srcSize;
+                g_texUv[t] = { srcSize.x / sz.x, srcSize.y / sz.y };
+            } else {
+                g_texSize[t] = sz;
+            }
+            SKSE::log::info("HudUI - texture {}: loaded ({}x{})", p, static_cast<int>(g_texSize[t].x), static_cast<int>(g_texSize[t].y));
         } else {
-            SKSE::log::info("HudUI - texture {}: not loaded ({}); flat shapes used for this piece", p, ExplainDDS(p));
+            SKSE::log::info("HudUI - texture {}: not loaded ({}); {}", p, ExplainDDS(p),
+                            optional ? "base art + tint used for this state" : "flat shapes used for this piece");
         }
         return t;
     }
@@ -317,21 +401,28 @@ namespace HudUI {
             SKSE::log::error("SKSE Menu Framework not loadable - HUD bar won't render");
             return;
         }
-        g_texBg    = TryLoad("bar_bg");
-        g_texFill  = TryLoad("bar_fill");
-        g_texFrame = TryLoad("bar_frame");
-        g_texIcon  = TryLoad("icon");
-
-        int stagesLoaded = 0;
-        for (int i = 0; i < kStages; ++i) {
-            char n[16];
-            std::snprintf(n, sizeof(n), "energy%d", i);
-            g_stage[i] = TryLoad(n);
-            if (g_stage[i]) ++stagesLoaded;
+        g_texIcon = TryLoad("icon");
+        for (int s = 0; s < kStates; ++s) {
+            char n[32];
+            const bool optional = s > 0;   // _drain / _death variants are extras; silence "not loaded"
+            std::snprintf(n, sizeof(n), "bar_bg%s", kStateSuffix[s]);    g_texBg[s]    = TryLoad(n, optional);
+            std::snprintf(n, sizeof(n), "bar_fill%s", kStateSuffix[s]);  g_texFill[s]  = TryLoad(n, optional);
+            std::snprintf(n, sizeof(n), "bar_frame%s", kStateSuffix[s]); g_texFrame[s] = TryLoad(n, optional);
+            int loaded = 0;
+            for (int i = 0; i < kStages; ++i) {
+                std::snprintf(n, sizeof(n), "energy%d%s", i, kStateSuffix[s]);
+                g_stage[s][i] = TryLoad(n, optional);
+                if (g_stage[s][i]) ++loaded;
+            }
+            if (s == 0) {
+                g_stagesComplete = (loaded == kStages);
+                SKSE::log::info("HudUI::Register - stage frames {}/{} -> stage mode {}", loaded, kStages,
+                                g_stagesComplete ? "available" : "unavailable (auto uses crop/flat)");
+            } else {
+                SKSE::log::info("HudUI::Register - '{}' art: stage frames {}/{}, crop fill {} (missing pieces use the base art + tint)",
+                                kStateSuffix[s], loaded, kStages, g_texFill[s] ? "yes" : "no");
+            }
         }
-        g_stagesComplete = (stagesLoaded == kStages);
-        SKSE::log::info("HudUI::Register - stage frames {}/{} -> stage mode {}", stagesLoaded, kStages,
-                        g_stagesComplete ? "available" : "unavailable (auto uses crop/flat)");
 
         SKSEMenuFramework::AddHudElement(Render);
         g_registered = true;
