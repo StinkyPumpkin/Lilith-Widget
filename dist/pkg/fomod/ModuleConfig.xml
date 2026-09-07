@@ -10,6 +10,15 @@
     <file source="Interface\HUDWidgets\lilith\bar_fill.dds" destination="Interface\HUDWidgets\lilith\bar_fill.dds"/>
     <file source="Interface\HUDWidgets\lilith\bar_frame.dds" destination="Interface\HUDWidgets\lilith\bar_frame.dds"/>
     <file source="Interface\HUDWidgets\lilith\icon.dds" destination="Interface\HUDWidgets\lilith\icon.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy0.dds" destination="Interface\HUDWidgets\lilith\energy0.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy1.dds" destination="Interface\HUDWidgets\lilith\energy1.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy2.dds" destination="Interface\HUDWidgets\lilith\energy2.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy3.dds" destination="Interface\HUDWidgets\lilith\energy3.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy4.dds" destination="Interface\HUDWidgets\lilith\energy4.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy5.dds" destination="Interface\HUDWidgets\lilith\energy5.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy6.dds" destination="Interface\HUDWidgets\lilith\energy6.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy7.dds" destination="Interface\HUDWidgets\lilith\energy7.dds"/>
+    <file source="Interface\HUDWidgets\lilith\energy8.dds" destination="Interface\HUDWidgets\lilith\energy8.dds"/>
     <file source="LICENSE-ChildrenOfLilith.txt" destination="LICENSE-ChildrenOfLilith.txt"/>
   </requiredInstallFiles>
   <installSteps order="Explicit">
