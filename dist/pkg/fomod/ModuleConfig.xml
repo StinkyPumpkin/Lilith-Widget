@@ -14,8 +14,8 @@
       <optionalFileGroups order="Explicit">
         <group name="Bar art style" type="SelectExactlyOne">
           <plugins order="Explicit">
-            <plugin name="Stage frames (9 images, one per level)">
-              <description>energy0.dds to energy8.dds - a complete bar image per energy level, the same way OSL Aroused Widget's aroused0-8 work. Easiest to repaint: each level is its own picture.</description>
+            <plugin name="Stage frames (one image per level, x3 drain states)">
+              <description>energy0-8.dds plus energy0-8_drain.dds and energy0-8_death.dds - a complete bar image per energy level and per drain state (idle / draining / drain to death), the same way OSL Aroused Widget's aroused0-8 work. Exact colours, no tinting. Easiest to repaint: each picture stands alone.</description>
               <files>
                 <file source="Art\Stages\energy0.dds" destination="Interface\HUDWidgets\lilith\energy0.dds"/>
                 <file source="Art\Stages\energy1.dds" destination="Interface\HUDWidgets\lilith\energy1.dds"/>
@@ -26,14 +26,34 @@
                 <file source="Art\Stages\energy6.dds" destination="Interface\HUDWidgets\lilith\energy6.dds"/>
                 <file source="Art\Stages\energy7.dds" destination="Interface\HUDWidgets\lilith\energy7.dds"/>
                 <file source="Art\Stages\energy8.dds" destination="Interface\HUDWidgets\lilith\energy8.dds"/>
+                <file source="Art\Stages\energy0_drain.dds" destination="Interface\HUDWidgets\lilith\energy0_drain.dds"/>
+                <file source="Art\Stages\energy1_drain.dds" destination="Interface\HUDWidgets\lilith\energy1_drain.dds"/>
+                <file source="Art\Stages\energy2_drain.dds" destination="Interface\HUDWidgets\lilith\energy2_drain.dds"/>
+                <file source="Art\Stages\energy3_drain.dds" destination="Interface\HUDWidgets\lilith\energy3_drain.dds"/>
+                <file source="Art\Stages\energy4_drain.dds" destination="Interface\HUDWidgets\lilith\energy4_drain.dds"/>
+                <file source="Art\Stages\energy5_drain.dds" destination="Interface\HUDWidgets\lilith\energy5_drain.dds"/>
+                <file source="Art\Stages\energy6_drain.dds" destination="Interface\HUDWidgets\lilith\energy6_drain.dds"/>
+                <file source="Art\Stages\energy7_drain.dds" destination="Interface\HUDWidgets\lilith\energy7_drain.dds"/>
+                <file source="Art\Stages\energy8_drain.dds" destination="Interface\HUDWidgets\lilith\energy8_drain.dds"/>
+                <file source="Art\Stages\energy0_death.dds" destination="Interface\HUDWidgets\lilith\energy0_death.dds"/>
+                <file source="Art\Stages\energy1_death.dds" destination="Interface\HUDWidgets\lilith\energy1_death.dds"/>
+                <file source="Art\Stages\energy2_death.dds" destination="Interface\HUDWidgets\lilith\energy2_death.dds"/>
+                <file source="Art\Stages\energy3_death.dds" destination="Interface\HUDWidgets\lilith\energy3_death.dds"/>
+                <file source="Art\Stages\energy4_death.dds" destination="Interface\HUDWidgets\lilith\energy4_death.dds"/>
+                <file source="Art\Stages\energy5_death.dds" destination="Interface\HUDWidgets\lilith\energy5_death.dds"/>
+                <file source="Art\Stages\energy6_death.dds" destination="Interface\HUDWidgets\lilith\energy6_death.dds"/>
+                <file source="Art\Stages\energy7_death.dds" destination="Interface\HUDWidgets\lilith\energy7_death.dds"/>
+                <file source="Art\Stages\energy8_death.dds" destination="Interface\HUDWidgets\lilith\energy8_death.dds"/>
               </files>
               <typeDescriptor><type name="Recommended"/></typeDescriptor>
             </plugin>
-            <plugin name="Single bar (3 images, cropped as it empties)">
-              <description>bar_bg.dds, bar_fill.dds, bar_frame.dds - one fill image that the widget crops from the left by energy percent, plus a background and a frame. Smooth per-percent fill; what you paint at the 40% mark shows at 40% energy.</description>
+            <plugin name="Single bar (cropped as it empties, x3 drain states)">
+              <description>bar_bg.dds, bar_frame.dds and bar_fill.dds / bar_fill_drain.dds / bar_fill_death.dds - one fill image per drain state that the widget crops from the left by energy percent, plus a background and a frame. Smooth per-percent fill; what you paint at the 40% mark shows at 40% energy.</description>
               <files>
                 <file source="Art\Crop\bar_bg.dds" destination="Interface\HUDWidgets\lilith\bar_bg.dds"/>
                 <file source="Art\Crop\bar_fill.dds" destination="Interface\HUDWidgets\lilith\bar_fill.dds"/>
+                <file source="Art\Crop\bar_fill_drain.dds" destination="Interface\HUDWidgets\lilith\bar_fill_drain.dds"/>
+                <file source="Art\Crop\bar_fill_death.dds" destination="Interface\HUDWidgets\lilith\bar_fill_death.dds"/>
                 <file source="Art\Crop\bar_frame.dds" destination="Interface\HUDWidgets\lilith\bar_frame.dds"/>
               </files>
               <typeDescriptor><type name="Optional"/></typeDescriptor>
