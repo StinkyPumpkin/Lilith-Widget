@@ -18,6 +18,12 @@ namespace Settings {
         // 0 = auto (energy0..8.dds stage frames if present, else bar_fill crop, else flat),
         // 1 = force crop (bar_bg/bar_fill/bar_frame), 2 = force stage frames.
         int   fillMode     = 0;
+        // With textures: bar height follows the image's aspect ratio at the chosen width
+        // (an ornate 1024x250 frame is not squashed into a 320x24 strip). Off = width/height as set.
+        bool  keepAspect   = true;
+        // Stage frames are complete paintings; multiply-tinting them by drain state turns a
+        // copper frame purple. Off by default; crop-mode bar_fill is always tinted.
+        bool  tintStages   = false;
         // How often the Papyrus values are re-read (ms). Reads are cheap and run
         // on the render thread, but energy only changes a few times a minute.
         int   readCadenceMs = 500;

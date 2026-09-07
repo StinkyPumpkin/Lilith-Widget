@@ -15,6 +15,9 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <unordered_map>
+
+#include <d3d11.h>
 #include <string>
 
 // Energy bar for Children of Lilith, drawn with the ImGui draw list so it needs no
@@ -38,6 +41,35 @@ namespace {
     std::array<ImGuiMCP::ImTextureID, kStages> g_stage{};
     bool g_stagesComplete = false;   // all 9 stage frames loaded
     bool g_registered = false;
+
+    // Native pixel size of each loaded texture (ImTextureID is an ID3D11ShaderResourceView*
+    // under SKSE Menu Framework's DX11 backend). Used to keep the bar at the art's aspect.
+    std::unordered_map<void*, ImVec2> g_texSize;
+
+    ImVec2 QueryTexSize(ImGuiMCP::ImTextureID id) {
+        ImVec2 out{ 0, 0 };
+        auto* srv = static_cast<ID3D11ShaderResourceView*>(id);
+        if (!srv) return out;
+        ID3D11Resource* res = nullptr;
+        srv->GetResource(&res);
+        if (!res) return out;
+        ID3D11Texture2D* tex = nullptr;
+        if (SUCCEEDED(res->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&tex))) && tex) {
+            D3D11_TEXTURE2D_DESC d{};
+            tex->GetDesc(&d);
+            out = { static_cast<float>(d.Width), static_cast<float>(d.Height) };
+            tex->Release();
+        }
+        res->Release();
+        return out;
+    }
+
+    // Aspect (h/w) of a texture, or 0 if unknown.
+    float TexAspect(ImGuiMCP::ImTextureID id) {
+        auto it = g_texSize.find(id);
+        if (it == g_texSize.end() || it->second.x <= 0.0f) return 0.0f;
+        return it->second.y / it->second.x;
+    }
 
     // Same mapping as the arousal widget: 0..99 -> 0..8 in 12-point steps, 100 -> 8.
     int StageFromPercent(float pct) {
@@ -104,9 +136,28 @@ namespace {
         const float pct = st.energyMax > 0.0f ? std::clamp(st.energy / st.energyMax, 0.0f, 1.0f) : 0.0f;
         const float A   = std::clamp(cfg.alpha, 0.0f, 1.0f);
         const float w   = std::max(cfg.width, 8.0f);
-        const float h   = std::max(cfg.height, 2.0f);
         const bool  tex = cfg.useTextures;
         const float gap = 4.0f;
+
+        // Which art draws the bar this frame: stage frame (one image per level) or crop set.
+        bool stageMode = false;
+        if (tex) {
+            if (cfg.fillMode == 2)      stageMode = true;
+            else if (cfg.fillMode == 0) stageMode = g_stagesComplete;
+        }
+        ImGuiMCP::ImTextureID stageTex = nullptr;
+        if (stageMode) {
+            stageTex = g_stage[StageFromPercent(pct)];
+            if (!stageTex) stageMode = false;   // forced but frame missing -> fall back
+        }
+
+        // Bar height: from the art's aspect ratio at the chosen width (keepAspect), else as set.
+        float h = std::max(cfg.height, 2.0f);
+        if (tex && cfg.keepAspect) {
+            const float asp = stageMode ? TexAspect(stageTex)
+                            : (g_texBg ? TexAspect(g_texBg) : (g_texFill ? TexAspect(g_texFill) : 0.0f));
+            if (asp > 0.0f) h = std::max(w * asp, 2.0f);
+        }
 
         auto* font = ImGuiMCP::GetFont();
 
@@ -153,20 +204,10 @@ namespace {
         if (pct < 0.2f && st.drainCode != 2) fillA *= 0.55f + 0.45f * Pulse(1.6f);   // low-energy breathe
         const float rounding = std::min(h * 0.35f, 8.0f);
 
-        // Stage-frame mode: one complete image per level replaces bg + fill + frame.
-        bool stageMode = false;
-        if (tex) {
-            if (cfg.fillMode == 2)      stageMode = true;
-            else if (cfg.fillMode == 0) stageMode = g_stagesComplete;
-        }
-        ImGuiMCP::ImTextureID stageTex = nullptr;
         if (stageMode) {
-            stageTex = g_stage[StageFromPercent(pct)];
-            if (!stageTex) stageMode = false;   // forced but frame missing -> fall back
-        }
-
-        if (stageMode) {
-            DL::AddImage(dl, stageTex, p0, p1, { 0, 0 }, { 1, 1 }, Col(pal.light, fillA));
+            // Stage frames are finished paintings: tint only if asked (breathe still fades the alpha).
+            const Rgb stageCol = cfg.tintStages ? pal.light : Rgb{ 255, 255, 255 };
+            DL::AddImage(dl, stageTex, p0, p1, { 0, 0 }, { 1, 1 }, Col(stageCol, fillA));
         } else {
         if (tex && g_texBg) {
             DL::AddImage(dl, g_texBg, p0, p1, { 0, 0 }, { 1, 1 }, Col({255, 255, 255}, A));
@@ -254,8 +295,13 @@ namespace {
         char p[128];
         std::snprintf(p, sizeof(p), "Data/Interface/HUDWidgets/lilith/%s.dds", name);
         auto t = SKSEMenuFramework::LoadTexture(p);
-        if (t) SKSE::log::info("HudUI - texture {}: loaded", p);
-        else   SKSE::log::info("HudUI - texture {}: not loaded ({}); flat shapes used for this piece", p, ExplainDDS(p));
+        if (t) {
+            const ImVec2 sz = QueryTexSize(t);
+            g_texSize[t] = sz;
+            SKSE::log::info("HudUI - texture {}: loaded ({}x{})", p, static_cast<int>(sz.x), static_cast<int>(sz.y));
+        } else {
+            SKSE::log::info("HudUI - texture {}: not loaded ({}); flat shapes used for this piece", p, ExplainDDS(p));
+        }
         return t;
     }
 }
