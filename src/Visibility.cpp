@@ -161,6 +161,11 @@ namespace Visibility {
 
         if (ui->GameIsPaused()) return false;
 
+        // Follow the game's own "show menus" flag. This is what the `tm` console command
+        // and po3's Photo Mode "Hide UI" flip (UI::ShowMenus); it hides every Scaleform
+        // menu but not an ImGui overlay, so mirror it here.
+        if (!ui->IsShowingMenus()) return false;
+
         // Load screens: the menu-name/pause checks below can miss transitions
         // (field report: widget visible during a loading screen). The player's
         // 3D is unloaded during every load — a reliable catch-all.
