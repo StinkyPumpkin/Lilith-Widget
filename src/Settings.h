@@ -21,9 +21,9 @@ namespace Settings {
         // With textures: bar height follows the image's aspect ratio at the chosen width
         // (an ornate 1024x250 frame is not squashed into a 320x24 strip). Off = width/height as set.
         bool  keepAspect   = true;
-        // Stage frames are complete paintings; multiply-tinting them by drain state turns a
-        // copper frame purple. Off by default; crop-mode bar_fill is always tinted.
-        bool  tintStages   = false;
+        // Multiply-tint stage frames by drain state (lilac idle / pink draining / red drain to
+        // death). On by default (users want the colour change); off keeps a frame's own colours.
+        bool  tintStages   = true;
         // How often the Papyrus values are re-read (ms). Reads are cheap and run
         // on the render thread, but energy only changes a few times a minute.
         int   readCadenceMs = 500;
