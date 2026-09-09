@@ -3,6 +3,7 @@
 #include "HudUI.h"
 #include "Settings.h"
 #include "SettingsUI.h"
+#include "Visibility.h"
 #include "iHUDBridge.h"
 
 #include <REL/Relocation.h>
@@ -82,9 +83,13 @@ namespace {
 
     void SaveLoop() {
         using namespace std::chrono;
+        int tick = 0;
         while (g_saveRunning.load(std::memory_order_relaxed)) {
-            std::this_thread::sleep_for(1s);
-            if (Settings::TakeDirty()) {
+            std::this_thread::sleep_for(250ms);
+            // v0.1.5: compass-follow state is read on the MAIN thread via an SKSE task
+            // (Scaleform GetVariable from the render hook crashed - see Visibility.cpp).
+            Visibility::QueueCompassPoll();
+            if (++tick % 4 == 0 && Settings::TakeDirty()) {
                 Settings::Save();
             }
         }
