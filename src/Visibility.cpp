@@ -111,6 +111,18 @@ namespace {
         return r;
     }
 
+    // v0.1.5 (same fix as Aroused Widget 0.3.7): the compass read used to run inside
+    // ShouldRender(), i.e. inside SKSE Menu Framework's render callback (the D3D Present
+    // hook). GetVariable() walks the HUD movie's ActionScript objects and AddRefs whatever
+    // it finds; around load transitions the main thread is tearing down / rebuilding that
+    // movie while Present keeps firing, so the AddRef landed on a freed object
+    // (SkyrimSE.exe+10EA1D9 `inc [rax+0x20]` under HudManager::Render). Now the read runs
+    // ONLY on the main thread (SKSE task, queued from the save loop every 250 ms) and the
+    // render path reads these atomics.
+    std::atomic<bool> g_compassHidden{false};
+    std::atomic<bool> g_compassResolved{false};
+    std::atomic<bool> g_pollQueued{false};
+
     void LogCompassChange(const CompassRead& cur) {
         if (cur.pathIdx != g_resolvedPathIdx) {
             if (cur.pathIdx >= 0) {
@@ -205,11 +217,43 @@ namespace Visibility {
         bool follow = true;
         { auto lk = Settings::Lock(); follow = Settings::Get().followCompassHide; }
         if (follow) {
-            auto rd = ReadCompassAlpha();
-            LogCompassChange(rd);
-            if (rd.pathIdx >= 0 && rd.hidden) return false;
+            // Main-thread poll result only - never touch Scaleform from the render path.
+            if (g_compassResolved.load(std::memory_order_relaxed) &&
+                g_compassHidden.load(std::memory_order_relaxed)) return false;
         }
 
         return true;
+    }
+
+    void QueueCompassPoll() {
+        bool follow = true;
+        { auto lk = Settings::Lock(); follow = Settings::Get().followCompassHide; }
+        if (!follow) {
+            g_compassResolved.store(false, std::memory_order_relaxed);
+            g_compassHidden.store(false, std::memory_order_relaxed);
+            return;
+        }
+        // One outstanding task at a time: during a load the main thread does not drain
+        // SKSE tasks for seconds, and we must not pile up hundreds of polls behind it.
+        if (g_pollQueued.exchange(true, std::memory_order_acq_rel)) return;
+        auto* tasks = SKSE::GetTaskInterface();
+        if (!tasks) { g_pollQueued.store(false, std::memory_order_relaxed); return; }
+        tasks->AddTask([]() {
+            g_pollQueued.store(false, std::memory_order_relaxed);
+            auto* ui = RE::UI::GetSingleton();
+            auto* player = RE::PlayerCharacter::GetSingleton();
+            // Nothing to read while the HUD movie may be mid-rebuild; keep the last state
+            // but mark it unresolved so a stale "hidden" can't outlive a load.
+            if (!ui || !player || !player->Is3DLoaded() ||
+                ui->IsMenuOpen("Loading Menu") || ui->IsMenuOpen("Fader Menu") ||
+                ui->IsMenuOpen("Main Menu") || !ui->IsMenuOpen("HUD Menu")) {
+                g_compassResolved.store(false, std::memory_order_relaxed);
+                return;
+            }
+            auto rd = ReadCompassAlpha();
+            LogCompassChange(rd);
+            g_compassHidden.store(rd.pathIdx >= 0 && rd.hidden, std::memory_order_relaxed);
+            g_compassResolved.store(rd.pathIdx >= 0, std::memory_order_relaxed);
+        });
     }
 }
