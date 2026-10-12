@@ -117,8 +117,13 @@ namespace {
     // it finds; around load transitions the main thread is tearing down / rebuilding that
     // movie while Present keeps firing, so the AddRef landed on a freed object
     // (SkyrimSE.exe+10EA1D9 `inc [rax+0x20]` under HudManager::Render). Now the read runs
-    // ONLY on the main thread (SKSE task, queued from the save loop every 250 ms) and the
-    // render path reads these atomics.
+    // ONLY as an SKSE UI task (queued from the save loop every 250 ms) and the render path
+    // reads these atomics.
+    // --Claude 2026-10-13: AddUITask, not AddTask. AddTask tasks run on a BSJobs thread
+    // (Job_Post_process) at the same time as Job_UI, which runs the HUD movie's ActionScript;
+    // Scaleform's ref counts are not atomic, so the 4x/s GetVariable on the compass raced
+    // the compass script itself (2 CTDs, SkyrimSE.exe+FF1FB3 inside the compass's
+    // SetMarkers, on a freed clip handle). UI tasks run on the UI thread, between frames.
     std::atomic<bool> g_compassHidden{false};
     std::atomic<bool> g_compassResolved{false};
     std::atomic<bool> g_pollQueued{false};
@@ -233,12 +238,13 @@ namespace Visibility {
             g_compassHidden.store(false, std::memory_order_relaxed);
             return;
         }
-        // One outstanding task at a time: during a load the main thread does not drain
-        // SKSE tasks for seconds, and we must not pile up hundreds of polls behind it.
+        // One outstanding task at a time: during a load SKSE tasks can wait for seconds,
+        // and we must not pile up hundreds of polls behind them.
         if (g_pollQueued.exchange(true, std::memory_order_acq_rel)) return;
         auto* tasks = SKSE::GetTaskInterface();
         if (!tasks) { g_pollQueued.store(false, std::memory_order_relaxed); return; }
-        tasks->AddTask([]() {
+        // UI thread only: Scaleform is not thread-safe (see g_compassHidden above).
+        tasks->AddUITask([]() {
             g_pollQueued.store(false, std::memory_order_relaxed);
             auto* ui = RE::UI::GetSingleton();
             auto* player = RE::PlayerCharacter::GetSingleton();
