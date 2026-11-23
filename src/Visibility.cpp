@@ -214,7 +214,10 @@ namespace Visibility {
         auto* pc = RE::PlayerCamera::GetSingleton();
         if (pc) {
             const auto idx = static_cast<size_t>(RE::CameraStates::kAutoVanity);
-            const auto& vanityState = pc->cameraStates[idx];
+            // 0.1.7 (CommonLibSSE-NG 9.x): cameraStates sits at a different offset on VR, so it is read
+            // through the runtime-data accessors.
+            const auto& vanityState = REL::Module::IsVR() ? pc->GetVRRuntimeData()->cameraStates[idx]
+                                                          : pc->GetRuntimeData().cameraStates[idx];
             const auto& cur = pc->currentState;
             if (cur && vanityState && cur.get() == vanityState.get()) return false;
         }

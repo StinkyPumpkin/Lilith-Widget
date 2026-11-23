@@ -37,7 +37,7 @@ Existing saves: fine. The old "Widgets" MCM page stays in saves that already had
 
 ## Build
 
-`build.bat` (VS 2022 BuildTools, Ninja, vcpkg with the Monitor221hz registry for commonlibsse-ng). Deploys to `%SKYRIM_MODS_FOLDER%\Lilith Widget--Claude`.
+`git submodule update --init --recursive --depth 1`, then `build.bat` (VS 2022, Ninja, vcpkg). CommonLibSSE-NG is built from source out of the pinned submodule `extern/CommonLibSSE-NG` (alandtse, tag v9.1.0), so one DLL loads on SE 1.5.97, AE 1.6.x, 1.7.x and VR. When `SKYRIM_MODS_FOLDER` is set, the DLL is also copied to `%SKYRIM_MODS_FOLDER%/Lilith Widget--Claude`.
 
 `tools/StripIWant` (dotnet 8 + Mutagen) rewrites the CoL plugins without the iWant master:
 

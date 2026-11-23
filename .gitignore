@@ -1,4 +1,4 @@
-﻿build/
+build/
 out/
 .vs/
 .vscode/
@@ -10,3 +10,7 @@ vcpkg_installed/
 *.obj
 *.lib
 *.log
+# build output of the .NET helper and release zips (zips go on GitHub releases / Nexus)
+tools/**/bin/
+tools/**/obj/
+dist/*.zip

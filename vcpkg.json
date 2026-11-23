@@ -1,8 +1,12 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
     "name": "lilithwidget-claude",
-    "version-string": "0.1.0",
+    "version-string": "0.1.7",
     "dependencies": [
-        "commonlibsse-ng"
+        "directxmath",
+        "directxtk",
+        "fmt",
+        "rapidcsv",
+        "spdlog"
     ]
 }
