@@ -25,6 +25,8 @@ Nexus: https://www.nexusmods.com/skyrimspecialedition/mods/191060
 | `ChildrenOfLilith.esp` | CoL 5.2.0 with the `iWant Widgets.esl` master removed. Only change: the iWidgets script property on the widget quest and the old widget MCM page are gone. Same FormIDs. |
 | `Scripts/CoL_UI_Widget_Script.pex` | iWant-free replacement for CoL's meter script. Keeps every function the rest of CoL calls as no-ops and stores the drain state for the DLL. |
 | Patches (FOMOD optional) | CoL's four bundled patches (A Skyrim Kiss, FlowerGirls, Immersive Lap Sitting, Vancian/Ordinator) re-mastered without iWant Widgets. Pick the ones you already use. |
+| `LICENSE.txt`, `README.txt` | GPL-3.0 licence text, copyright notice and source link. Also installed to `SKSE/Plugins/LilithWidget/`. |
+| `LICENSE-ChildrenOfLilith.txt` | Children of Lilith's own licence (MIT + Commons Clause), covering the CoL plugins and script. |
 
 Install AFTER Children of Lilith so the ESP and script override. Then remove iWant Widgets and iWant Widgets.esl.
 
@@ -56,4 +58,15 @@ dotnet run -c Release -- <CoL unpacked dir> <out dir>
 | is succubus | GlobalVariable `CoL_IsPlayerSuccubus` (0x000D63) |
 | level, progress | GlobalVariables `CoL_playerSuccubusLevel` (0x13B614), `CoL_playerSuccubusLevelRatio` (0x282A20) |
 
-Children of Lilith is MIT + Commons Clause (Phalanx); the redistributed plugins carry its license file.
+## License
+
+Copyright (C) 2026 StinkyPumpkin
+
+Lilith Widget (`LilithWidget.dll`, the C++ source in `src/`, `tools/StripIWant` and the bar art templates) is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for the full text.
+
+Third-party parts:
+
+- [CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG) (alandtse, v9.1.0, statically linked): GPL-3.0-or-later with the Modding Exception and GPL-3.0 Linking Exception.
+- Children of Lilith (Phalanx): MIT + Commons Clause. The redistributed CoL plugins, patches and the replacement `CoL_UI_Widget_Script` (with the header stubs in `papyrus/stubs/`) stay under that licence; its file ships as `LICENSE-ChildrenOfLilith.txt`.
+- `include/SKSEMenuFramework.h`: the SKSE Menu Framework API header.
+- vcpkg dependencies of the plugin and CommonLibSSE-NG: spdlog, fmt, DirectXTK, DirectXMath (MIT), rapidcsv (BSD-3-Clause).

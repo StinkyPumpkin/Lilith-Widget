@@ -8,6 +8,8 @@
     <file source="Scripts\Source\CoL_UI_Widget_Script.psc" destination="Scripts\Source\CoL_UI_Widget_Script.psc"/>
     <file source="Art\icon.dds" destination="Interface\HUDWidgets\lilith\icon.dds"/>
     <file source="LICENSE-ChildrenOfLilith.txt" destination="LICENSE-ChildrenOfLilith.txt"/>
+    <file source="LICENSE.txt" destination="SKSE\Plugins\LilithWidget\LICENSE.txt"/>
+    <file source="README.txt" destination="SKSE\Plugins\LilithWidget\README.txt"/>
   </requiredInstallFiles>
   <installSteps order="Explicit">
     <installStep name="Bar art">
